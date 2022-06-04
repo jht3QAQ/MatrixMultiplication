@@ -99,7 +99,7 @@ readFile proc uses esi,_lpszFileName:LPSTR
 			invoke 	crt_puts,addr s_open_file_error
 			invoke 	crt_exit, -1
 		.endif
-		mov 	esi,@lpStFileData											;获取文件大小
+		mov 	esi,@lpStFileData										;获取文件大小
 		assume 	esi:pFileData
 		invoke 	crt_fseek,@pStInputFile,0,SEEK_END
 		invoke 	crt_ftell,@pStInputFile
@@ -111,7 +111,7 @@ readFile proc uses esi,_lpszFileName:LPSTR
 
 		invoke 	crt_puts,[esi].pData
 
-		invoke 	crt_fclose,@pStInputFile									;fclose(lpszFileName)
+		invoke 	crt_fclose,@pStInputFile								;fclose(lpszFileName)
 		mov eax,@lpStFileData
 		ret
 readFile endp
@@ -125,7 +125,7 @@ readMatrix proc uses esi edi ecx,_lpStFileData:pFileData
 		local 	@lpArrY:DWORD,@lpMatrix:DWORD,@matrixSize:DWORD
 		mov 	@matrixX,0
 		mov 	@matrixY,0
-		mov 	esi,_lpStFileData											;获取行数
+		mov 	esi,_lpStFileData										;获取行数
 		assume 	esi:pFileData
 		mov 	esi,[esi].pData
 		mov 	ecx,0
@@ -140,7 +140,7 @@ readMatrix proc uses esi edi ecx,_lpStFileData:pFileData
 		invoke 	crt_calloc,@matrixY,sizeof DWORD
 		mov 	@lpArrY,eax
 
-		mov 	esi,_lpStFileData											;储存行
+		mov 	esi,_lpStFileData										;储存行
 		assume 	esi:pFileData
 		mov 	esi,[esi].pData
 		mov 	edi,@lpArrY
@@ -192,7 +192,7 @@ readMatrix proc uses esi edi ecx,_lpStFileData:pFileData
 			inc 	ecx
 		.endw
 
-		mov 	eax,@matrixX												;为数组分配内存
+		mov 	eax,@matrixX											;为数组分配内存
 		mul 	@matrixY
 		mov 	@matrixSize,eax
 		invoke 	crt_calloc,@matrixSize,sizeof DWORD
@@ -274,8 +274,8 @@ mulMatrix proc uses ebx ecx edx esi edi,_lpSMatrixDataA:pMatrixData,_lpSMatrixDa
 		invoke 	crt_calloc,eax,sizeof DWORD
 		mov 	@lpMatrix,eax
 
-		mov  	@tempY,0													;A数组Y
-		mov 	@tempX,0													;B数组X
+		mov  	@tempY,0												;A数组Y
+		mov 	@tempX,0												;B数组X
 		mov 	@tempXY,0												;A数组X B数组Y
 
 		mov 	eax,@tempY												;矩阵乘法
