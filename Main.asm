@@ -92,7 +92,7 @@ readFile proc uses esi,_lpszFileName:LPSTR
 		local 	@pStInputFile:PVOID,@lpStFileData:pFileData				;文件指针FILE* pStInputFile,文件数据fileData* pStFileData
 		invoke 	crt_malloc,sizeof fileData								;为fileData分配内存
 		mov 	@lpStFileData,eax
-		invoke 	crt_printf,addr s_reading_input_file_s,_lpszFileName		;pStInputFile=fopen(lpszFileName)
+		invoke 	crt_printf,addr s_reading_input_file_s,_lpszFileName	;pStInputFile=fopen(lpszFileName)
 		invoke 	crt_fopen,_lpszFileName,addr s_r
 		mov 	@pStInputFile,eax
 		.if @pStInputFile == 0
