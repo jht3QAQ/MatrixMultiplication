@@ -1,7 +1,7 @@
 EXE = main.exe
 OBJS = Main.obj
 
-LINK_FLAG = /subsystem:CONSOLE 
+LINK_FLAG = /subsystem:CONSOLE
 ML_FLAG = /c /coff
 
 $(EXE): $(OBJS) $(RES)

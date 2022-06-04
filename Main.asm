@@ -5,7 +5,6 @@ option casemap:none
 
 include windows.inc
 include msvcrt.inc
-include masm32.inc
 includelib masm32.lib
 includelib msvcrt.lib
 include Kernel32.inc
@@ -42,77 +41,78 @@ matrixData ends
 pMatrixData typedef ptr matrixData
 
 main proto
-readFile proto lpszFileName:LPSTR
-readMatrix proto lpStFileData:pFileData
-mulMatrix proto lpSMatrixDataA:pMatrixData,lpSMatrixDataB:pMatrixData
-printMatrix proto lpSMatrixData:pMatrixData
-saveMatrix proto lpSMatrixData:pMatrixData,lpszFileName:LPSTR
+readFile proto _lpszFileName:LPSTR
+readMatrix proto _lpStFileData:pFileData
+mulMatrix proto _lpSMatrixDataA:pMatrixData,_lpSMatrixDataB:pMatrixData
+printMatrix proto _lpSMatrixData:pMatrixData
+saveMatrix proto _lpSMatrixData:pMatrixData,_lpszFileName:LPSTR
 
 .code
 main proc uses esi
-		local 	argc:PINT,argv:PVOID,env:PVOID,dwNewMode:DWORD,matrixFileA:pFileData,matrixFileB:pFileData,lpStMatrixDataA:pMatrixData,lpStMatrixDataB:pMatrixData,lpStAns:pMatrixData
-		invoke 	crt___getmainargs,addr argc,addr argv,addr env,0,addr dwNewMode
+		local 	@argc:PINT,@argv:PVOID,@env:PVOID,@dwNewMode:DWORD
+		local 	@matrixFileA:pFileData,@matrixFileB:pFileData
+		local 	@lpStMatrixDataA:pMatrixData,@lpStMatrixDataB:pMatrixData,@lpStAns:pMatrixData
+		invoke 	crt___getmainargs,addr @argc,addr @argv,addr @env,0,addr @dwNewMode
 		.if eax != 0
 			invoke 	crt_puts,addr s_get_args_error
-			invoke 	ExitProcess, -1
+			invoke 	crt_exit, -1
 		.endif
-		.if argc != 4
+		.if @argc != 4
 			invoke 	crt_puts,addr s_arg_error
-			invoke 	ExitProcess, -1
+			invoke 	crt_exit, -1
 		.endif
 
-		mov 	esi,argv
+		mov 	esi,@argv
 
 		invoke 	readFile,[esi]+4
-		mov 	matrixFileA,eax
-		invoke 	readMatrix,matrixFileA
-		mov 	lpStMatrixDataA,eax
+		mov 	@matrixFileA,eax
+		invoke 	readMatrix,@matrixFileA
+		mov 	@lpStMatrixDataA,eax
 		
 		invoke 	readFile,[esi]+8
-		mov 	matrixFileB,eax
-		invoke 	readMatrix,matrixFileB
-		mov 	lpStMatrixDataB,eax
+		mov 	@matrixFileB,eax
+		invoke 	readMatrix,@matrixFileB
+		mov 	@lpStMatrixDataB,eax
 
-		invoke 	mulMatrix,lpStMatrixDataA,lpStMatrixDataB
-		mov 	lpStAns,eax
+		invoke 	mulMatrix,@lpStMatrixDataA,@lpStMatrixDataB
+		mov 	@lpStAns,eax
 
 		invoke 	crt_printf,addr s_the_answer_is
-		invoke 	printMatrix,lpStAns
-		invoke 	saveMatrix,lpStAns,[esi]+12
+		invoke 	printMatrix,@lpStAns
+		invoke 	saveMatrix,@lpStAns,[esi]+12
 
-		invoke 	ExitProcess, 0
+		invoke 	crt_exit, 0
 main endp
 
 ;子程序名:	readFile
 ;功能:		读取文件并返回文件数据
 ;入口参数:	lpszFileName=文件名称字符串指针
 ;出口参数:	eax=fileData结构体指针
-readFile proc uses esi,lpszFileName:LPSTR
-		local 	pStInputFile:PVOID,lpStFileData:pFileData				;文件指针FILE* pStInputFile,文件数据fileData* pStFileData
+readFile proc uses esi,_lpszFileName:LPSTR
+		local 	@pStInputFile:PVOID,@lpStFileData:pFileData				;文件指针FILE* pStInputFile,文件数据fileData* pStFileData
 		invoke 	crt_malloc,sizeof fileData								;为fileData分配内存
-		mov 	lpStFileData,eax
-		invoke 	crt_printf,addr s_reading_input_file_s,lpszFileName		;pStInputFile=fopen(lpszFileName)
-		invoke 	crt_fopen,lpszFileName,addr s_r
-		mov 	pStInputFile,eax
-		.if pStInputFile == 0
+		mov 	@lpStFileData,eax
+		invoke 	crt_printf,addr s_reading_input_file_s,_lpszFileName		;pStInputFile=fopen(lpszFileName)
+		invoke 	crt_fopen,_lpszFileName,addr s_r
+		mov 	@pStInputFile,eax
+		.if @pStInputFile == 0
 			invoke 	crt_puts,addr s_open_file_error
-			invoke 	ExitProcess, -1
+			invoke 	crt_exit, -1
 		.endif
-		mov 	esi,lpStFileData											;获取文件大小
+		mov 	esi,@lpStFileData											;获取文件大小
 		assume 	esi:pFileData
-		invoke 	crt_fseek,pStInputFile,0,SEEK_END
-		invoke 	crt_ftell,pStInputFile
+		invoke 	crt_fseek,@pStInputFile,0,SEEK_END
+		invoke 	crt_ftell,@pStInputFile
 		mov 	[esi].len,eax
-		invoke 	crt_fseek,pStInputFile,0,SEEK_SET
-		invoke 	crt_malloc,[esi].len									;为文件数据分配空间
+		invoke 	crt_fseek,@pStInputFile,0,SEEK_SET
+		invoke 	crt_calloc,1,[esi].len									;为文件数据分配空间
 		mov 	[esi].pData,eax
-		invoke 	RtlZeroMemory,[esi].pData,[esi].len
-		invoke 	crt_fread,[esi].pData,sizeof CHAR,[esi].len,pStInputFile;读取文件数据
+		invoke 	crt_fread,[esi].pData,sizeof CHAR,[esi].len,@pStInputFile;读取文件数据
 
 		invoke 	crt_puts,[esi].pData
 
-		invoke 	crt_fclose,pStInputFile									;fclose(lpszFileName)
-		mov eax,lpStFileData
+		invoke 	crt_fclose,@pStInputFile									;fclose(lpszFileName)
+		mov eax,@lpStFileData
 		ret
 readFile endp
 
@@ -120,11 +120,12 @@ readFile endp
 ;功能:		根据读取到的文件信息转化成数组信息
 ;入口参数:	pStFileData=fileData结构体指针
 ;出口参数:	eax=matrixData结构体指针
-readMatrix proc uses esi edi ecx,lpStFileData:pFileData
-		local 	matrixX:DWORD,matrixY:DWORD,lpArrY:DWORD,lpMatrix:DWORD,matrixSize:DWORD
-		mov 	matrixX,0
-		mov 	matrixY,0
-		mov 	esi,lpStFileData											;获取行数
+readMatrix proc uses esi edi ecx,_lpStFileData:pFileData
+		local 	@matrixX:DWORD,@matrixY:DWORD
+		local 	@lpArrY:DWORD,@lpMatrix:DWORD,@matrixSize:DWORD
+		mov 	@matrixX,0
+		mov 	@matrixY,0
+		mov 	esi,_lpStFileData											;获取行数
 		assume 	esi:pFileData
 		mov 	esi,[esi].pData
 		mov 	ecx,0
@@ -135,14 +136,14 @@ readMatrix proc uses esi edi ecx,lpStFileData:pFileData
 			.endif
 		.until 	al == 0
 		inc 	ecx
-		mov 	matrixY,ecx
-		invoke 	crt_calloc,matrixY,sizeof DWORD
-		mov 	lpArrY,eax
+		mov 	@matrixY,ecx
+		invoke 	crt_calloc,@matrixY,sizeof DWORD
+		mov 	@lpArrY,eax
 
-		mov 	esi,lpStFileData											;储存行
+		mov 	esi,_lpStFileData											;储存行
 		assume 	esi:pFileData
 		mov 	esi,[esi].pData
-		mov 	edi,lpArrY
+		mov 	edi,@lpArrY
 		mov 	[edi],esi
 		add 	edi,4
 		.repeat
@@ -155,8 +156,8 @@ readMatrix proc uses esi edi ecx,lpStFileData:pFileData
 		.until 	al == 0
 
 		mov 	ecx,0													;循环每一行 获取列数
-		mov 	esi,lpArrY
-		.while 	ecx < matrixY
+		mov 	esi,@lpArrY
+		.while 	ecx < @matrixY
 			push 	ecx
 
 			push 	esi
@@ -176,12 +177,12 @@ readMatrix proc uses esi edi ecx,lpStFileData:pFileData
 					xor 	ebx,ebx 	
 				.endif
 			.until al==0 || al==10
-			.if matrixX == 0
-				mov matrixX,ecx
+			.if @matrixX == 0
+				mov @matrixX,ecx
 			.else
-				.if matrixX != ecx
+				.if @matrixX != ecx
 					invoke 	crt_puts,addr s_matrix_format_error
-					invoke 	ExitProcess, -1
+					invoke 	crt_exit, -1
 				.endif
 			.endif
 			pop 	esi
@@ -191,22 +192,22 @@ readMatrix proc uses esi edi ecx,lpStFileData:pFileData
 			inc 	ecx
 		.endw
 
-		mov 	eax,matrixX												;为数组分配内存
-		mul 	matrixY
-		mov 	matrixSize,eax
-		invoke 	crt_calloc,matrixSize,sizeof DWORD
-		mov 	lpMatrix,eax
+		mov 	eax,@matrixX												;为数组分配内存
+		mul 	@matrixY
+		mov 	@matrixSize,eax
+		invoke 	crt_calloc,@matrixSize,sizeof DWORD
+		mov 	@lpMatrix,eax
 
 		mov 	ecx,0													;向数组写入数字
-		mov 	esi,lpStFileData
+		mov 	esi,_lpStFileData
 		assume 	esi:pFileData
 		mov 	esi,[esi].pData
-		.while 	ecx < matrixSize
+		.while 	ecx < @matrixSize
 			push 	ecx
 			
 			mov 	eax,4
 			mul 	ecx
-			add 	eax,lpMatrix
+			add 	eax,@lpMatrix
 			invoke 	crt_sscanf,esi,addr s_d,eax
 
 			.repeat
@@ -221,15 +222,15 @@ readMatrix proc uses esi edi ecx,lpStFileData:pFileData
 			inc 	ecx
 		.endw
 
-		invoke 	crt_printf,addr s_this_is_a_d_d_matrix,matrixY,matrixX
+		invoke 	crt_printf,addr s_this_is_a_d_d_matrix,@matrixY,@matrixX
 
 		invoke 	crt_malloc,sizeof matrixData
 		assume 	eax:pMatrixData
-		mov 	ebx,matrixY
+		mov 	ebx,@matrixY
 		mov 	[eax].Y,ebx
-		mov 	ebx,matrixX
+		mov 	ebx,@matrixX
 		mov 	[eax].X,ebx
-		mov 	ebx,lpMatrix
+		mov 	ebx,@lpMatrix
 		mov 	[eax].lpData,ebx
 		ret
 readMatrix endp
@@ -239,63 +240,65 @@ readMatrix endp
 ;入口参数:	lpSMatrixDataA=第一个矩阵matrixData结构体指针
 ;			lpSMatrixDataB=第二个矩阵matrixData结构体指针
 ;出口参数:	eax=matrixData结构体指针
-mulMatrix proc uses ebx ecx edx esi edi,lpSMatrixDataA:pMatrixData,lpSMatrixDataB:pMatrixData
-		local X1:DWORD,Y1:DWORD,X2:DWORD,Y2:DWORD,lpMatrix:DWORD,tempX:DWORD,tempY:DWORD,tempXY:DWORD
-		mov 	esi,lpSMatrixDataA
-		mov 	edi,lpSMatrixDataB
+mulMatrix proc uses ebx ecx edx esi edi,_lpSMatrixDataA:pMatrixData,_lpSMatrixDataB:pMatrixData
+		local 	@X1:DWORD,@Y1:DWORD,@X2:DWORD,@Y2:DWORD
+		local 	@lpMatrix:DWORD
+		local 	@tempX:DWORD,@tempY:DWORD,@tempXY:DWORD
+		mov 	esi,_lpSMatrixDataA
+		mov 	edi,_lpSMatrixDataB
 		assume 	esi:pMatrixData
 		assume 	edi:pMatrixData
 		assume 	eax:DWORD
 		mov 	eax,[esi].X
-		mov 	X1,eax
+		mov 	@X1,eax
 		mov 	eax,[esi].Y
-		mov 	Y1,eax
+		mov 	@Y1,eax
 		mov 	eax,[edi].X
-		mov 	X2,eax
+		mov 	@X2,eax
 		mov 	eax,[edi].Y
-		mov 	Y2,eax
+		mov 	@Y2,eax
 		mov 	esi,[esi].lpData
 		mov 	edi,[edi].lpData
 		assume 	esi:DWORD
 		assume 	edi:DWORD
 
-		mov 	eax,X1
-		mov 	ebx,Y2
+		mov 	eax,@X1
+		mov 	ebx,@Y2
 		.if 	eax != ebx
 			invoke 	crt_puts,addr s_matrix_cant_be_multiplied
-			invoke 	ExitProcess, -1
+			invoke 	crt_exit, -1
 		.endif
 		
-		mov 	eax,Y1
-		mul 	X2
+		mov 	eax,@Y1
+		mul 	@X2
 		invoke 	crt_calloc,eax,sizeof DWORD
-		mov 	lpMatrix,eax
+		mov 	@lpMatrix,eax
 
-		mov  	tempY,0													;A数组Y
-		mov 	tempX,0													;B数组X
-		mov 	tempXY,0												;A数组X B数组Y
+		mov  	@tempY,0													;A数组Y
+		mov 	@tempX,0													;B数组X
+		mov 	@tempXY,0												;A数组X B数组Y
 
-		mov 	eax,tempY												;矩阵乘法
-		.while 	eax<Y1
-			mov 	eax,tempX
-			.while 	eax<X2
-				mov 	eax,tempXY
-				.while eax<Y2
+		mov 	eax,@tempY												;矩阵乘法
+		.while 	eax<@Y1
+			mov 	eax,@tempX
+			.while 	eax<@X2
+				mov 	eax,@tempXY
+				.while eax<@Y2
 
-					mov 	eax,[tempY]
-					mov 	ebx,X1
+					mov 	eax,[@tempY]
+					mov 	ebx,@X1
 					mul 	ebx
-					add 	eax,[tempXY]
+					add 	eax,[@tempXY]
 					mov 	ebx,4
 					mul 	ebx
 					add 	eax,esi
 					mov 	eax,[eax]
 					push 	eax
 
-					mov 	eax,[tempXY]
-					mov 	ebx,X2
+					mov 	eax,[@tempXY]
+					mov 	ebx,@X2
 					mul 	ebx
-					add 	eax,[tempX]
+					add 	eax,[@tempX]
 					mov 	ebx,4
 					mul 	ebx
 					add 	eax,edi
@@ -308,39 +311,39 @@ mulMatrix proc uses ebx ecx edx esi edi,lpSMatrixDataA:pMatrixData,lpSMatrixData
 					imul 	ebx
 					push 	eax
 
-					mov 	eax,[tempY]
-					mov 	ebx,X2
+					mov 	eax,[@tempY]
+					mov 	ebx,@X2
 					mul 	ebx
-					add 	eax,[tempX]
+					add 	eax,[@tempX]
 					mov 	ebx,4
 					mul 	ebx
-					add 	eax,lpMatrix
+					add 	eax,@lpMatrix
 
 					pop 	ebx
 					add 	[eax],ebx
 
 					mov 	eax,[eax]
 
-					inc 	tempXY
-					mov 	eax,tempXY
+					inc 	@tempXY
+					mov 	eax,@tempXY
 				.endw
-				mov 	tempXY,0
-				inc 	tempX
-				mov 	eax,tempX
+				mov 	@tempXY,0
+				inc 	@tempX
+				mov 	eax,@tempX
 			.endw
-			mov tempX,0
-			inc 	tempY
-			mov 	eax,tempY
+			mov @tempX,0
+			inc 	@tempY
+			mov 	eax,@tempY
 		.endw
-		mov 	tempY,0
+		mov 	@tempY,0
 		
 		invoke 	crt_malloc,sizeof matrixData
 		assume 	eax:pMatrixData
-		mov 	ebx,Y1
+		mov 	ebx,@Y1
 		mov 	[eax].Y,ebx
-		mov 	ebx,X2
+		mov 	ebx,@X2
 		mov 	[eax].X,ebx
-		mov 	ebx,lpMatrix
+		mov 	ebx,@lpMatrix
 		mov 	[eax].lpData,ebx
 
 		ret
@@ -349,9 +352,9 @@ mulMatrix endp
 ;子程序名:	printMatrix
 ;功能:		打印矩阵到屏幕
 ;入口参数:	lpSMatrixData=需要打印的矩阵
-printMatrix proc uses ebx ecx edx esi edi,lpSMatrixData:pMatrixData
+printMatrix proc uses ebx ecx edx esi edi,_lpSMatrixData:pMatrixData
 		assume 	eax:pMatrixData
-		mov 	eax,lpSMatrixData
+		mov 	eax,_lpSMatrixData
 		mov 	ebx,[eax].X
 		mov 	ecx,[eax].Y
 		mov 	edx,[eax].lpData
@@ -383,21 +386,21 @@ printMatrix endp
 ;功能:		保存矩阵到文件
 ;入口参数:	lpSMatrixData=需要保存的矩阵
 ;			
-saveMatrix proc uses ebx ecx edx esi edi,lpSMatrixData:pMatrixData,lpszFileName:LPSTR
-		local pStInputFile:PVOID
+saveMatrix proc uses ebx ecx edx esi edi,_lpSMatrixData:pMatrixData,_lpszFileName:LPSTR
+		local @pStInputFile:PVOID
 
-		invoke 	crt_printf,addr s_saving_to_the_file_s,lpszFileName
+		invoke 	crt_printf,addr s_saving_to_the_file_s,_lpszFileName
 
-		invoke 	crt_fopen,lpszFileName,addr s_w
-		mov 	pStInputFile,eax
-		.if pStInputFile == 0
+		invoke 	crt_fopen,_lpszFileName,addr s_w
+		mov 	@pStInputFile,eax
+		.if @pStInputFile == 0
 			invoke 	crt_puts,addr s_open_file_error
-			invoke 	ExitProcess, -1
+			invoke 	crt_exit, -1
 		.endif
 
 
 		assume 	eax:pMatrixData
-		mov 	eax,lpSMatrixData
+		mov 	eax,_lpSMatrixData
 		mov 	ebx,[eax].X
 		mov 	ecx,[eax].Y
 		mov 	edx,[eax].lpData
@@ -409,7 +412,7 @@ saveMatrix proc uses ebx ecx edx esi edi,lpSMatrixData:pMatrixData,lpszFileName:
 				mov 	eax,[edx]
 
 				pushad
-				invoke 	crt_fprintf,pStInputFile,addr s_d,eax
+				invoke 	crt_fprintf,@pStInputFile,addr s_d,eax
 				popad
 
 				add 	edx,4
@@ -417,13 +420,13 @@ saveMatrix proc uses ebx ecx edx esi edi,lpSMatrixData:pMatrixData,lpszFileName:
 			.endw
 
 			pushad
-			invoke 	crt_fputc,10,pStInputFile
+			invoke 	crt_fputc,10,@pStInputFile
 			popad
 
 			inc 	esi
 		.endw
 
-		invoke 	crt_fclose,pStInputFile
+		invoke 	crt_fclose,@pStInputFile
 
 		invoke 	crt_printf,addr s_saved
 		ret
