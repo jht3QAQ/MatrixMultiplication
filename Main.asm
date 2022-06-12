@@ -5,10 +5,7 @@ option casemap:none
 
 include windows.inc
 include msvcrt.inc
-includelib masm32.lib
 includelib msvcrt.lib
-include Kernel32.inc
-includelib Kernel32.lib
 
 .const
 s_d db "%d ",0
@@ -205,10 +202,9 @@ readMatrix proc uses esi edi ecx,_lpStFileData:pFileData
 		.while 	ecx < @matrixSize
 			push 	ecx
 			
-			mov 	eax,4
-			mul 	ecx
-			add 	eax,@lpMatrix
-			invoke 	crt_sscanf,esi,addr s_d,eax
+			shl 	ecx,2
+			add 	ecx,@lpMatrix
+			invoke 	crt_sscanf,esi,addr s_d,ecx
 
 			.repeat
 				lodsb
@@ -289,8 +285,7 @@ mulMatrix proc uses ebx ecx edx esi edi,_lpSMatrixDataA:pMatrixData,_lpSMatrixDa
 					mov 	ebx,@X1
 					mul 	ebx
 					add 	eax,[@tempXY]
-					mov 	ebx,4
-					mul 	ebx
+					shl 	eax,2
 					add 	eax,esi
 					mov 	eax,[eax]
 					push 	eax
@@ -299,8 +294,7 @@ mulMatrix proc uses ebx ecx edx esi edi,_lpSMatrixDataA:pMatrixData,_lpSMatrixDa
 					mov 	ebx,@X2
 					mul 	ebx
 					add 	eax,[@tempX]
-					mov 	ebx,4
-					mul 	ebx
+					shl 	eax,2
 					add 	eax,edi
 					mov 	eax,[eax]
 					push 	eax
@@ -308,15 +302,14 @@ mulMatrix proc uses ebx ecx edx esi edi,_lpSMatrixDataA:pMatrixData,_lpSMatrixDa
 					pop 	eax
 					pop 	ebx
 					
-					imul 	ebx
+					mul 	ebx
 					push 	eax
 
 					mov 	eax,[@tempY]
 					mov 	ebx,@X2
 					mul 	ebx
 					add 	eax,[@tempX]
-					mov 	ebx,4
-					mul 	ebx
+					shl 	eax,2
 					add 	eax,@lpMatrix
 
 					pop 	ebx
