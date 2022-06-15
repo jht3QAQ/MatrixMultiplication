@@ -2,3 +2,5 @@
 *.exe
 *.idb
 *.obj
+*.doc
+*.tmp

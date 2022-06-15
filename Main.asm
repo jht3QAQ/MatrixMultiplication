@@ -189,6 +189,8 @@ readMatrix proc uses esi edi ecx,_lpStFileData:pFileData
 			inc 	ecx
 		.endw
 
+		invoke 	crt_free,@lpArrY
+
 		mov 	eax,@matrixX											;为数组分配内存
 		mul 	@matrixY
 		mov 	@matrixSize,eax
@@ -228,6 +230,7 @@ readMatrix proc uses esi edi ecx,_lpStFileData:pFileData
 		mov 	[eax].X,ebx
 		mov 	ebx,@lpMatrix
 		mov 	[eax].lpData,ebx
+
 		ret
 readMatrix endp
 
