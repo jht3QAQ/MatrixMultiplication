@@ -1,16 +1,29 @@
-EXE = main.exe
-OBJS = Main.obj
+#适用于GnuWin32 Make
+EXE := main.exe
+OBJS := Main.obj
 
-LINK_FLAG = /subsystem:CONSOLE
-ML_FLAG = /c /coff
+MASM32_DIR := H:\masm32
+LIB := $(MASM32_DIR)\lib
+INCLUDE := $(MASM32_DIR)\include
+
+ML := $(MASM32_DIR)\bin\ml.exe
+LINK := $(MASM32_DIR)\bin\link.exe
+RC := $(MASM32_DIR)\bin\rc.exe
+
+LINK_FLAG := /subsystem:CONSOLE /LIBPATH:$(LIB)
+ML_FLAG := /c /coff /I$(INCLUDE)
 
 $(EXE): $(OBJS) $(RES)
-	link $(LINK_FLAG) /out:$(EXE) $(OBJS) $(RES)
+	$(LINK) $(LINK_FLAG) /out:$(EXE) $(OBJS) $(RES)
 
-.asm.obj:
-	ml $(ML_FLAG) $<
-.rc.res:
-	rc $<
+%.obj: %.asm
+	$(ML) $(ML_FLAG) $<
+%.res: %.rc
+	$(RC) $<
+
+.PHONY : clean all
+
+all: $(EXE)
 
 clean:
 	del *.obj
