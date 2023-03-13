@@ -28,3 +28,4 @@ all: $(EXE)
 clean:
 	del *.obj
 	del *.res
+	del $(EXE)
